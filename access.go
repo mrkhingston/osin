@@ -168,6 +168,11 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	if ret.Client = getClient(auth, w.Storage, w); ret.Client == nil {
 		return nil
 	}
+	if !ret.Client.GetRequiresSecret() {
+		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
+		return nil
+	}
 
 	// must be a valid authorization code
 	var err error
@@ -249,6 +254,11 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	if ret.Client = getClient(auth, w.Storage, w); ret.Client == nil {
 		return nil
 	}
+	if !ret.Client.GetRequiresSecret() {
+		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
+		return nil
+	}
 
 	// must be a valid refresh code
 	var err error
@@ -309,7 +319,7 @@ func (s *Server) handlePasswordRequest(w *Response, r *http.Request) *AccessRequ
 
 	// "username" and "password" is required
 	if ret.Username == "" || ret.Password == "" {
-		w.SetError(E_INVALID_GRANT, "")
+		w.SetError(E_INVALID_GRANT, "Username and password required.")
 		return nil
 	}
 
@@ -472,17 +482,17 @@ func getClient(auth *BasicAuth, storage Storage, w *Response) Client {
 	}
 	if client == nil {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-        w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
+		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil
 	}
 	if client.GetRequiresSecret() && client.GetSecret() != auth.Password {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-        w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
+		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil
 	}
 	if client.GetRedirectUri() == "" {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-        w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
+		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil
 	}
 	return client
