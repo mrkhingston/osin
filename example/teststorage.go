@@ -22,10 +22,10 @@ func NewTestStorage() *TestStorage {
 	}
 
 	r.clients["1234"] = &osin.DefaultClient{
-		Id:          "1234",
-		Secret:      "aabbccdd",
-		RedirectUri: "http://localhost:14000/appauth",
-        RequiresSecret: true,
+		Id:                   "1234",
+		Secret:               "aabbccdd",
+		RedirectUri:          "http://localhost:14000/appauth",
+		IsPasswordOnlyClient: false,
 	}
 
 	return r

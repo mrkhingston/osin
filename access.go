@@ -168,7 +168,7 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	if ret.Client = getClient(auth, w.Storage, w); ret.Client == nil {
 		return nil
 	}
-	if !ret.Client.GetRequiresSecret() {
+	if ret.Client.GetIsPasswordOnlyClient() {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
 		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil
@@ -254,7 +254,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	if ret.Client = getClient(auth, w.Storage, w); ret.Client == nil {
 		return nil
 	}
-	if !ret.Client.GetRequiresSecret() {
+	if ret.Client.GetIsPasswordOnlyClient() {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
 		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil
@@ -485,7 +485,7 @@ func getClient(auth *BasicAuth, storage Storage, w *Response) Client {
 		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil
 	}
-	if client.GetRequiresSecret() && client.GetSecret() != auth.Password {
+	if !client.GetIsPasswordOnlyClient() && client.GetSecret() != auth.Password {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
 		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
 		return nil

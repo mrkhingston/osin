@@ -12,7 +12,9 @@ type Client interface {
 	GetRedirectUri() string
 
 	// Allow client secret to be ignored for mobile and desktop clients
-	GetRequiresSecret() bool
+	// Set to true means no client secret required and only password
+	// token requests allowed.
+	GetIsPasswordOnlyClient() bool
 
 	// Data to be passed to storage. Not used by the library.
 	GetUserData() interface{}
@@ -20,11 +22,11 @@ type Client interface {
 
 // DefaultClient stores all data in struct variables
 type DefaultClient struct {
-	Id             string
-	Secret         string
-	RedirectUri    string
-	RequiresSecret bool
-	UserData       interface{}
+	Id                   string
+	Secret               string
+	RedirectUri          string
+	IsPasswordOnlyClient bool
+	UserData             interface{}
 }
 
 func (d *DefaultClient) GetId() string {
@@ -39,8 +41,8 @@ func (d *DefaultClient) GetRedirectUri() string {
 	return d.RedirectUri
 }
 
-func (d *DefaultClient) GetRequiresSecret() bool {
-	return d.RequiresSecret
+func (d *DefaultClient) GetIsPasswordOnlyClient() bool {
+	return d.IsPasswordOnlyClient
 }
 
 func (d *DefaultClient) GetUserData() interface{} {
@@ -51,6 +53,6 @@ func (d *DefaultClient) CopyFrom(client Client) {
 	d.Id = client.GetId()
 	d.Secret = client.GetSecret()
 	d.RedirectUri = client.GetRedirectUri()
-	d.RequiresSecret = client.GetRequiresSecret()
+	d.IsPasswordOnlyClient = client.GetIsPasswordOnlyClient()
 	d.UserData = client.GetUserData()
 }
