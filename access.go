@@ -2,6 +2,7 @@ package osin
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -160,7 +161,7 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 
 	// "code" is required
 	if ret.Code == "" {
-		w.SetError(E_INVALID_GRANT, "")
+		w.SetError(E_INVALID_GRANT, "Missing \"code\" from Authorization Code request")
 		return nil
 	}
 
@@ -170,7 +171,7 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	}
 	if ret.Client.GetIsPasswordOnlyClient() {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
-		w.InternalError = errors.New(E_UNAUTHORIZED_CLIENT)
+		w.InternalError = errors.New("Password only client Unauthorized for Auth Code request")
 		return nil
 	}
 
@@ -184,24 +185,29 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	}
 	if ret.AuthorizeData == nil {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+        w.InternalError = errors.New("No authorize data loaded")
 		return nil
 	}
 	if ret.AuthorizeData.Client == nil {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+        w.InternalError = errors.New("No authorize client loaded")
 		return nil
 	}
 	if ret.AuthorizeData.Client.GetRedirectUri() == "" {
 		w.SetError(E_UNAUTHORIZED_CLIENT, "")
+        w.InternalError = errors.New("No authorize redirect uri loaded")
 		return nil
 	}
 	if ret.AuthorizeData.IsExpired() {
 		w.SetError(E_INVALID_GRANT, "")
+		w.InternalError = errors.New("Authorize data expired in Authorization Code request")
 		return nil
 	}
 
 	// code must be from the client
 	if ret.AuthorizeData.Client.GetId() != ret.Client.GetId() {
 		w.SetError(E_INVALID_GRANT, "")
+		w.InternalError = errors.New(fmt.Sprintf("Stored Authorize data client id doesn't match request client id (%s vs %s) in Authorization Code request", ret.AuthorizeData.Client.GetId(), ret.Client.GetId()))
 		return nil
 	}
 
@@ -216,7 +222,7 @@ func (s *Server) handleAuthorizationCodeRequest(w *Response, r *http.Request) *A
 	}
 	if ret.AuthorizeData.RedirectUri != ret.RedirectUri {
 		w.SetError(E_INVALID_REQUEST, "")
-		w.InternalError = errors.New("Redirect uri is different")
+		w.InternalError = errors.New("Stored Authorize data redirect uri is different from the redirect uri in request")
 		return nil
 	}
 
@@ -246,7 +252,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 
 	// "refresh_token" is required
 	if ret.Code == "" {
-		w.SetError(E_INVALID_GRANT, "")
+		w.SetError(E_INVALID_GRANT, "Missing refresh token in Refresh Token request")
 		return nil
 	}
 
@@ -284,7 +290,7 @@ func (s *Server) handleRefreshTokenRequest(w *Response, r *http.Request) *Access
 	// client must be the same as the previous token
 	if ret.AccessData.Client.GetId() != ret.Client.GetId() {
 		w.SetError(E_INVALID_CLIENT, "")
-		w.InternalError = errors.New("Client id must be the same from previous token")
+		w.InternalError = errors.New("Client id must be the same from previous token (in Refresh Token request)")
 		return nil
 
 	}
